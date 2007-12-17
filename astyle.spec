@@ -7,7 +7,6 @@ License:        GPL or Artistic
 Group:          Development/C
 URL:            http://astyle.sourceforge.net/
 Source0:        http://internap.dl.sourceforge.net/sourceforge/astyle/astyle_%{version}_linux.tar.gz
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 
 %description
 Artistic Style is a series of filters that automatically reindent and reformat
