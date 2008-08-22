@@ -1,6 +1,6 @@
 Name:           astyle
-Version:        1.21
-Release:        %mkrel 3
+Version:        1.22
+Release:        %mkrel 1
 Epoch:          0
 Summary:        Reindenter and reformatter of C++, C and Java source code
 License:        GPL or Artistic
@@ -18,7 +18,7 @@ incorporated as classes in another C++ program.
 %setup -q -n astyle
 
 %build
-(cd build && %{make} CFLAGS="%{optflags}")
+(cd buildgcc && %{make} CFLAGS="%{optflags}")
 
 %install
 %{__rm} -rf %{buildroot}
