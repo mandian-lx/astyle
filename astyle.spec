@@ -1,9 +1,9 @@
 Name:           astyle
-Version:        1.22
+Version:        1.23
 Release:        %mkrel 1
 Epoch:          0
 Summary:        Reindenter and reformatter of C++, C and Java source code
-License:        GPL or Artistic
+License:        LGPLv3+
 Group:          Development/C
 URL:            http://astyle.sourceforge.net/
 Source0:        http://internap.dl.sourceforge.net/sourceforge/astyle/astyle_%{version}_linux.tar.gz
