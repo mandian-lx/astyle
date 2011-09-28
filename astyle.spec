@@ -1,6 +1,6 @@
 Name:           astyle
-Version:        1.24
-Release:        %mkrel 3
+Version:        2.02
+Release:        %mkrel 1
 Epoch:          0
 Summary:        Reindenter and reformatter of C++, C and Java source code
 License:        LGPLv3+
