@@ -1,5 +1,5 @@
 Name:           astyle
-Version:        2.02
+Version:        2.02.1
 Release:        %mkrel 1
 Epoch:          0
 Summary:        Reindenter and reformatter of C++, C and Java source code
@@ -21,14 +21,14 @@ incorporated as classes in another C++ program.
 (cd build/gcc && %{make} CFLAGS="%{optflags}")
 
 %install
-%{__rm} -rf %{buildroot}
-%{__mkdir_p} %{buildroot}%{_bindir}
-%{__install} -m 0755 build/gcc/bin/astyle %{buildroot}%{_bindir}/astyle
+%__rm -rf %{buildroot}
+%__mkdir_p %{buildroot}%{_bindir}
+%__install -m 0755 build/gcc/bin/astyle %{buildroot}%{_bindir}/astyle
 
 %clean
-%{__rm} -rf %{buildroot}
+%__rm -rf %{buildroot}
 
 %files
-%defattr(0644,root,root,0755) 
+%defattr(0644,root,root,0755)
 %doc doc/*
 %attr(0755,root,root) %{_bindir}/astyle
