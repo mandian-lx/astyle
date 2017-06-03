@@ -5,7 +5,7 @@
 Summary:	Reindenter and reformatter of C++, C and Java source code
 Name:		astyle
 Version:	3.0.1
-Release:	0
+Release:	1
 License:	MIT
 Group:		Development/C++
 Url:		http://astyle.sourceforge.net/
@@ -76,27 +76,7 @@ chmod a-x src/*
 %build
 %setup_compile_flags
 %make -C build/clang astylesjd
-
-# it's much easier to compile it here than trying to fix the Makefile
-#    g++ $RPM_OPT_FLAGS -DASTYLE_LIB -DASTYLE_JNI -fPIC -I/usr/lib/jvm/java/include -I/usr/lib/jvm/java/include/linux -c ASBeautifier.cpp ASEnhancer.cpp ASFormatter.cpp ASResource.cpp astyle_main.cpp
-#    g++ -shared -o libastyle.so.%{soversion} *.o -Wl,-soname,libastyle.so.%{majorversion}
-#    ln -s libastyle.so.%{soversion} libastyle.so
-#    g++ $RPM_OPT_FLAGS -c ASLocalizer.cpp astyle_main.cpp
-#	    g++ $RPM_OPT_FLAGS -o astyle ASLocalizer.o astyle_main.o -L. -lastyle
     
 %install
 %makeinstall_std -C build/clang
-
-# bin
-#install -dm 0755 %{buildroot}%{_bindir}/
-#install -pm 0755 build/clang/bin/%{name} %{buildroot}%{_bindir}/
-
-# header
-#install -dm 0755 %{buildroot}%{_includedir}/
-#install -pm 0644 src/%{name}.h %{buildroot}%{_includedir}/
-
-# lib
-#install -dm 0755 %{buildroot}%{_libdir}/
-#install -pm 0755 build/clang/bin/lib%{name}.so.* %{buildroot}%{_libdir}/
-#ln -s lib%{name}.so.%{version} %{buildroot}%{_libdir}/lib%{name}.so
 
