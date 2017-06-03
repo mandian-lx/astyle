@@ -15,6 +15,8 @@ Patch0:		%{name}-3.0.1-shared.patch
 #   https://raw.githubusercontent.com/arduino/astyle/master/patches/java_package_name.patch
 Patch1:		%{name}-3.0.1-arduino.patch
 
+BuildRequires:	java-devel
+
 %description
 Artistic Style is a series of filters that automatically reindent and reformat
 C/C++/Java source files. These can be used from a command line, or they can be
