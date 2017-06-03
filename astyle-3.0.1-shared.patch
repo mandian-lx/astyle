@@ -1,0 +1,290 @@
+--- astyle/build/clang/Makefile.shared
++++ astyle/build/clang/Makefile
+@@ -15,6 +15,10 @@
+        ASEnhancer.cpp \
+        ASResource.cpp
+ 
++# list of source files for shared linked astyle with only ASLocalizer
++SRCxx = astyle_main.cpp \
++        ASLocalizer.cpp
++
+ # source directories
+ vpath %.cpp ../../src
+ vpath %.h   ../../src
+@@ -22,19 +26,25 @@
+ # NOTE for java compiles the environment variable $JAVA_HOME must be set
+ # example: export JAVA_HOME=/usr/lib/jvm/java-6-sun-1.6.0.00
+ ifndef JAVA_HOME
+-    JAVA_HOME = /usr/lib/jvm/default-java
++    JAVA_HOME = /usr/lib/jvm/java
+ endif
+ 
+ # set prefix if not defined on the command line
+ ifndef prefix
+     prefix=/usr
+ endif
+-SYSCONF_PATH=$(prefix)/share/doc/astyle
++SYSCONF_PATH=$(DESTDIR)/$(prefix)/share/doc/astyle
+ 
+ # define macros
+ bindir = bin
+ objdir = obj
+-ipath=$(prefix)/bin
++ibinpath=$(DESTDIR)/$(prefix)/bin
++ifneq ( ,$(findstring 64,$(shell arch)) )
++ilibpath=$(DESTDIR)/$(prefix)/lib64
++else
++ilibpath=$(DESTDIR)/$(prefix)/lib
++endif
++iincpath=$(DESTDIR)/$(prefix)/include
+ CBASEFLAGS = -Wall -Wextra -fno-rtti -fno-exceptions -std=c++11
+ JAVAINCS   = -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/linux
+ CXX = clang++
+@@ -88,6 +98,8 @@
+ OBJad = $(patsubst %.cpp,$(objdir)/%_ad.o,$(SRCx))
+ OBJsj  = $(patsubst %.cpp,$(objdir)/%_sj.o,$(SRCx))
+ OBJsjd = $(patsubst %.cpp,$(objdir)/%_sjd.o,$(SRCx))
++OBJxx  = $(patsubst %.cpp,$(objdir)/%_x.o,$(SRCxx))
++OBJxxd = $(patsubst %.cpp,$(objdir)/%_xd.o,$(SRCxx))
+ 
+ # define object file rule (with the suffix) for each build
+ 
+@@ -131,6 +143,16 @@
+ 	@ mkdir -p $(objdir)
+ 	$(CXX) $(CFLAGSsjd) -c $< -o $@
+ 
++# OBJxx
++$(objdir)/%_x.o:  %.cpp  astyle.h  astyle_main.h
++	@ mkdir -p $(objdir)
++	$(CXX) $(CFLAGSr) -c $< -o $@
++
++# OBJxxd
++$(objdir)/%_xd.o:  %.cpp  astyle.h  astyle_main.h
++	@ mkdir -p $(objdir)
++	$(CXX) $(CFLAGSd) -c $< -o $@
++
+ ##################################################
+ # define build dependencies for each command
+ 
+@@ -146,16 +168,38 @@
+ 	$(CXX) $(LDFLAGSd) -o $(bindir)/$@ $^
+ 	@ echo
+ 
++astyles:  $(OBJxx) shared
++	@ mkdir -p $(bindir)
++	$(CXX) $(LDFLAGSr) -o $(bindir)/astyle $(OBJxx) -L$(bindir) -lastyle
++	@ echo
++
++astylesd:  $(OBJxx) shareddebug
++	@ mkdir -p $(bindir)
++	$(CXX) $(LDFLAGSr) -o $(bindir)/astyle $(OBJxx) -L$(bindir) -lastyle
++	@ echo
++
++astylesj:  $(OBJxx) java
++	@ mkdir -p $(bindir)
++	$(CXX) $(LDFLAGSr) -o $(bindir)/astyle $(OBJxx) -L$(bindir) -lastyle
++	@ echo
++
++astylesjd:  $(OBJxxd) javadebug
++	@ mkdir -p $(bindir)
++	$(CXX) $(LDFLAGSr) -o $(bindir)/astyle $(OBJxxd) -L$(bindir) -lastyle
++	@ echo
++
+ shared:  libastyle.so
+ libastyle.so:  $(OBJs)
+ 	@ mkdir -p $(bindir)
+ 	$(CXX) -shared $(LDFLAGSr) -Wl,-soname,libastyle.so.$(MAJORVER) -o $(bindir)/libastyle.so.$(SOLIBVER) $^
++	ln -s libastyle.so.$(SOLIBVER) $(bindir)/libastyle.so
+ 	@ echo
+ 
+ shareddebug:  libastyled.so
+ libastyled.so:  $(OBJsd)
+ 	@ mkdir -p $(bindir)
+-	$(CXX) -shared $(LDFLAGSd) -Wl,-soname,libastyled.so.$(MAJORVER) -o $(bindir)/libastyled.so.$(SOLIBVER) $^
++	$(CXX) -shared $(LDFLAGSd) -Wl,-soname,libastyle.so.$(MAJORVER) -o $(bindir)/libastyle.so.$(SOLIBVER) $^
++	ln -s libastyle.so.$(SOLIBVER) $(bindir)/libastyle.so
+ 	@ echo
+ 
+ static:  libastyle.a
+@@ -173,13 +217,15 @@
+ java:  libastylej.so
+ libastylej.so:  $(OBJsj)
+ 	@ mkdir -p $(bindir)
+-	$(CXX) -shared $(LDFLAGSr) -Wl,-soname,libastylej.so.$(MAJORVER) -o $(bindir)/libastylej.so.$(SOLIBVER) $^
++	$(CXX) -shared $(LDFLAGSr) -Wl,-soname,libastyle.so.$(MAJORVER) -o $(bindir)/libastyle.so.$(SOLIBVER) $^
++	ln -s libastyle.so.$(SOLIBVER) $(bindir)/libastyle.so
+ 	@ echo
+ 
+ javadebug:  libastylejd.so
+ libastylejd.so:  $(OBJsjd)
+ 	@ mkdir -p $(bindir)
+-	$(CXX) -shared $(LDFLAGSr) -Wl,-soname,libastylejd.so.$(MAJORVER) -o $(bindir)/libastylejd.so.$(SOLIBVER) $^
++	$(CXX) -shared $(LDFLAGSr) -Wl,-soname,libastyle.so.$(MAJORVER) -o $(bindir)/libastyle.so.$(SOLIBVER) $^
++	ln -s libastyle.so.$(SOLIBVER) $(bindir)/libastyle.so
+ 	@ echo
+ 
+ all:  release debug shared shareddebug static staticdebug
+@@ -193,8 +239,16 @@
+ 	rm -f $(objdir)/*.o
+ 
+ install:
+-	$(INSTALL) -m 755 -d $(ipath)
+-	@$(INSTALL) -m 755 $(bindir)/astyle  $(ipath)
++	$(INSTALL) -m 755 -d $(ibinpath)
++	@$(INSTALL) -m 755 $(bindir)/astyle  $(ibinpath)
++
++	$(INSTALL) -m 755 -d $(ilibpath)
++	@$(INSTALL) -m 755 $(bindir)/libastyle.so.$(SOLIBVER)  $(ilibpath)
++	@ln -s libastyle.so.$(SOLIBVER) $(ilibpath)/libastyle.so.$(MAJORVER)
++	@ln -s libastyle.so.$(SOLIBVER) $(ilibpath)/libastyle.so
++
++	$(INSTALL) -m 755 -d $(iincpath)
++	@$(INSTALL) -m 644 ../../src/astyle.h  $(iincpath)
+ 
+ 	@if [ -d $(SYSCONF_PATH)/html ]; then \
+ 		rm -rf  $(SYSCONF_PATH)/html; \
+--- astyle/build/gcc/Makefile.shared
++++ astyle/build/gcc/Makefile
+@@ -15,6 +15,10 @@
+        ASEnhancer.cpp \
+        ASResource.cpp
+ 
++# list of source files for shared linked astyle with only ASLocalizer
++SRCxx = astyle_main.cpp \
++        ASLocalizer.cpp
++
+ # source directories
+ vpath %.cpp ../../src
+ vpath %.h   ../../src
+@@ -22,19 +26,25 @@
+ # NOTE for java compiles the environment variable $JAVA_HOME must be set
+ # example: export JAVA_HOME=/usr/lib/jvm/java-6-sun-1.6.0.00
+ ifndef JAVA_HOME
+-    JAVA_HOME = /usr/lib/jvm/default-java
++    JAVA_HOME = /usr/lib/jvm/java
+ endif
+ 
+ # set prefix if not defined on the command line
+ ifndef prefix
+     prefix=/usr
+ endif
+-SYSCONF_PATH=$(prefix)/share/doc/astyle
++SYSCONF_PATH=$(DESTDIR)/$(prefix)/share/doc/astyle
+ 
+ # define macros
+ bindir = bin
+ objdir = obj
+-ipath=$(prefix)/bin
++ibinpath=$(DESTDIR)/$(prefix)/bin
++ifneq ( ,$(findstring 64,$(shell arch)) )
++ilibpath=$(DESTDIR)/$(prefix)/lib64
++else
++ilibpath=$(DESTDIR)/$(prefix)/lib
++endif
++iincpath=$(DESTDIR)/$(prefix)/include
+ CBASEFLAGS = -Wall -Wextra -fno-rtti -fno-exceptions -std=c++11
+ JAVAINCS   = -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/linux
+ CXX = g++
+@@ -88,6 +98,8 @@
+ OBJad = $(patsubst %.cpp,$(objdir)/%_ad.o,$(SRCx))
+ OBJsj  = $(patsubst %.cpp,$(objdir)/%_sj.o,$(SRCx))
+ OBJsjd = $(patsubst %.cpp,$(objdir)/%_sjd.o,$(SRCx))
++OBJxx  = $(patsubst %.cpp,$(objdir)/%_x.o,$(SRCxx))
++OBJxxd = $(patsubst %.cpp,$(objdir)/%_xd.o,$(SRCxx))
+ 
+ # define object file rule (with the suffix) for each build
+ 
+@@ -131,6 +143,16 @@
+ 	@ mkdir -p $(objdir)
+ 	$(CXX) $(CFLAGSsjd) -c $< -o $@
+ 
++# OBJxx
++$(objdir)/%_x.o:  %.cpp  astyle.h  astyle_main.h
++	@ mkdir -p $(objdir)
++	$(CXX) $(CFLAGSr) -c $< -o $@
++
++# OBJxxd
++$(objdir)/%_xd.o:  %.cpp  astyle.h  astyle_main.h
++	@ mkdir -p $(objdir)
++	$(CXX) $(CFLAGSd) -c $< -o $@
++
+ ##################################################
+ # define build dependencies for each command
+ 
+@@ -146,16 +168,38 @@
+ 	$(CXX) $(LDFLAGSd) -o $(bindir)/$@ $^
+ 	@ echo
+ 
++astyles:  $(OBJxx) shared
++	@ mkdir -p $(bindir)
++	$(CXX) $(LDFLAGSr) -o $(bindir)/astyle $(OBJxx) -L$(bindir) -lastyle
++	@ echo
++
++astylesd:  $(OBJxx) shareddebug
++	@ mkdir -p $(bindir)
++	$(CXX) $(LDFLAGSr) -o $(bindir)/astyle $(OBJxx) -L$(bindir) -lastyle
++	@ echo
++
++astylesj:  $(OBJxx) java
++	@ mkdir -p $(bindir)
++	$(CXX) $(LDFLAGSr) -o $(bindir)/astyle $(OBJxx) -L$(bindir) -lastyle
++	@ echo
++
++astylesjd:  $(OBJxxd) javadebug
++	@ mkdir -p $(bindir)
++	$(CXX) $(LDFLAGSr) -o $(bindir)/astyle $(OBJxxd) -L$(bindir) -lastyle
++	@ echo
++
+ shared:  libastyle.so
+ libastyle.so:  $(OBJs)
+ 	@ mkdir -p $(bindir)
+ 	$(CXX) -shared $(LDFLAGSr) -Wl,-soname,libastyle.so.$(MAJORVER) -o $(bindir)/libastyle.so.$(SOLIBVER) $^
++	ln -s libastyle.so.$(SOLIBVER) $(bindir)/libastyle.so
+ 	@ echo
+ 
+ shareddebug:  libastyled.so
+ libastyled.so:  $(OBJsd)
+ 	@ mkdir -p $(bindir)
+-	$(CXX) -shared $(LDFLAGSd) -Wl,-soname,libastyled.so.$(MAJORVER) -o $(bindir)/libastyled.so.$(SOLIBVER) $^
++	$(CXX) -shared $(LDFLAGSd) -Wl,-soname,libastyle.so.$(MAJORVER) -o $(bindir)/libastyle.so.$(SOLIBVER) $^
++	ln -s libastyle.so.$(SOLIBVER) $(bindir)/libastyle.so
+ 	@ echo
+ 
+ static:  libastyle.a
+@@ -173,13 +217,15 @@
+ java:  libastylej.so
+ libastylej.so:  $(OBJsj)
+ 	@ mkdir -p $(bindir)
+-	$(CXX) -shared $(LDFLAGSr) -Wl,-soname,libastylej.so.$(MAJORVER) -o $(bindir)/libastylej.so.$(SOLIBVER) $^
++	$(CXX) -shared $(LDFLAGSr) -Wl,-soname,libastyle.so.$(MAJORVER) -o $(bindir)/libastyle.so.$(SOLIBVER) $^
++	ln -s libastyle.so.$(SOLIBVER) $(bindir)/libastyle.so
+ 	@ echo
+ 
+ javadebug:  libastylejd.so
+ libastylejd.so:  $(OBJsjd)
+ 	@ mkdir -p $(bindir)
+-	$(CXX) -shared $(LDFLAGSr) -Wl,-soname,libastylejd.so.$(MAJORVER) -o $(bindir)/libastylejd.so.$(SOLIBVER) $^
++	$(CXX) -shared $(LDFLAGSr) -Wl,-soname,libastyle.so.$(MAJORVER) -o $(bindir)/libastyle.so.$(SOLIBVER) $^
++	ln -s libastyle.so.$(SOLIBVER) $(bindir)/libastyle.so
+ 	@ echo
+ 
+ all:  release debug shared shareddebug static staticdebug
+@@ -193,8 +239,16 @@
+ 	rm -f $(objdir)/*.o
+ 
+ install:
+-	$(INSTALL) -m 755 -d $(ipath)
+-	@$(INSTALL) -m 755 $(bindir)/astyle  $(ipath)
++	$(INSTALL) -m 755 -d $(ibinpath)
++	@$(INSTALL) -m 755 $(bindir)/astyle  $(ibinpath)
++
++	$(INSTALL) -m 755 -d $(ilibpath)
++	@$(INSTALL) -m 755 $(bindir)/libastyle.so.$(SOLIBVER)  $(ilibpath)
++	@ln -s libastyle.so.$(SOLIBVER) $(ilibpath)/libastyle.so.$(MAJORVER)
++	@ln -s libastyle.so.$(SOLIBVER) $(ilibpath)/libastyle.so
++
++	$(INSTALL) -m 755 -d $(iincpath)
++	@$(INSTALL) -m 644 ../../src/astyle.h  $(iincpath)
+ 
+ 	@if [ -d $(SYSCONF_PATH)/html ]; then \
+ 		rm -rf  $(SYSCONF_PATH)/html; \

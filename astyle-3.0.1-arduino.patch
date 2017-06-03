@@ -1,0 +1,61 @@
+--- astyle/src/astyle_main.h.arduino	2017-05-31 02:26:37.000000000 +0200
++++ astyle/src/astyle_main.h	2017-06-03 12:43:23.019300730 +0200
+@@ -406,12 +406,21 @@
+ char* STDCALL javaMemoryAlloc(unsigned long memoryNeeded);
+ // the following function names are constructed from method names in the calling java program
+ extern "C" EXPORT
+-jstring STDCALL Java_AStyleInterface_AStyleGetVersion(JNIEnv* env, jclass);
++jstring STDCALL Java_AStyleInterface_AStyleGetVersion(JNIEnv* env, jclass jcls);
+ extern "C" EXPORT
+ jstring STDCALL Java_AStyleInterface_AStyleMain(JNIEnv* env,
+                                                 jobject obj,
+                                                 jstring textInJava,
+                                                 jstring optionsJava);
++
++// Required by arduino
++extern "C" EXPORT
++jstring STDCALL Java_cc_arduino_packages_formatter_AStyleInterface_AStyleGetVersion(JNIEnv* env, jclass);
++extern "C" EXPORT
++jstring STDCALL Java_cc_arduino_packages_formatter_AStyleInterface_AStyleMain(JNIEnv* env,
++                                                jobject obj,
++                                                jstring textInJava,
++                                                jstring optionsJava);
+ #endif //  ASTYLE_JNI
+ 
+ //----------------------------------------------------------------------------
+--- astyle/src/astyle_main.cpp.arduino	2017-05-31 02:26:37.000000000 +0200
++++ astyle/src/astyle_main.cpp	2017-06-03 12:43:42.085864104 +0200
+@@ -3754,6 +3754,13 @@
+ 	return env->NewStringUTF(g_version);
+ }
+ 
++// Required by arduino
++extern "C"  EXPORT
++jstring STDCALL Java_cc_arduino_packages_formatter_AStyleInterface_AStyleGetVersion(JNIEnv* env, jclass jcls)
++{
++	return Java_AStyleInterface_AStyleGetVersion(env, jcls);
++}
++
+ // called by a java program to format the source code
+ // the function name is constructed from method names in the calling java program
+ extern "C"  EXPORT
+@@ -3795,6 +3802,19 @@
+ 	return textOutJava;
+ }
+ 
++// Required by arduino
++extern "C"  EXPORT
++jstring STDCALL Java_cc_arduino_packages_formatter_AStyleInterface_AStyleMain(JNIEnv* env,
++                                                                              jobject obj,
++                                                                              jstring textInJava,
++                                                                              jstring optionsJava)
++{
++	return  STDCALL Java_AStyleInterface_AStyleMain(env,
++                                                        obj,
++                                                        textInJava,
++                                                        optionsJava);
++}
++
+ // Call the Java error handler
+ void STDCALL javaErrorHandler(int errorNumber, const char* errorMessage)
+ {
